@@ -38,7 +38,7 @@ contract ArbitrageModule is SignatureValidator {
     address public immutable ownerSafeWallet;
     bytes32 private constant SAFE_MSG_TYPEHASH = 0x60b3cbf8b4a223d68d641b3b6ddf9a298e7f33710cf3d3a9d1146b5a6150fbca;
 
-    mapping(address token => Allowance) public allowanceAssets;
+    mapping(address safeWallet => mapping(address token => Allowance)) public allowanceAssets;
 
     struct Allowance {
         uint256 allowanceAmount;
@@ -64,15 +64,16 @@ contract ArbitrageModule is SignatureValidator {
     error WrongAmountOut(uint256 amountOut);
     error WrongAmountIn(uint256 amountIn);
     error WrongData();
+    error WrongEndTimestamp(uint16 currentTimestamp, uint16 endTimestamp);
 
-    constructor(address safeWalletAddress) {
-        ownerSafeWallet = safeWalletAddress;
-    }
+    function setAllowance(
+        address token,
+        uint256 allowanceAmount,
+        bool isTokenIn,
+        bool isTokenOut
+    ) public {
+        allowanceAssets[msg.sender][token] = Allowance(allowanceAmount, isTokenIn, isTokenOut);
 
-    function setAllowance(address token, uint256 allowanceAmount, bool isTokenIn, bool isTokenOut) public {
-        if (msg.sender != ownerSafeWallet) revert WrongCaller(msg.sender);
-
-        allowanceAssets[token] = Allowance(allowanceAmount, isTokenIn, isTokenOut);
         emit SetAllowance(msg.sender, token, allowanceAmount);
     }
 
@@ -120,9 +121,9 @@ contract ArbitrageModule is SignatureValidator {
 
         for (uint256 i = 0; i < orders.length; i++) {
             Order memory order = orders[i];
-            if (!allowanceAssets[order.tokenIn].isTokenIn) revert TokenNotAllowed(order.tokenIn);
-            if (!allowanceAssets[order.tokenOut].isTokenOut) revert TokenNotAllowed(order.tokenOut);
-            if (order.amountIn > allowanceAssets[order.tokenIn].allowanceAmount) revert WrongAmountIn(order.amountIn);
+            if (!allowanceAssets[msg.sender][order.tokenIn].isTokenIn) revert TokenNotAllowed(order.tokenIn);
+            if (!allowanceAssets[msg.sender][order.tokenOut].isTokenOut) revert TokenNotAllowed(order.tokenOut);
+            if (order.amountIn > allowanceAssets[msg.sender][order.tokenIn].allowanceAmount) revert WrongAmountIn(order.amountIn);
             if (order.amountIn == 0 || order.amountOut == 0) revert ZeroAmount();
             if (order.tokenIn == order.tokenOut) revert WrongToken(order.tokenOut);
             if (order.amountIn >= order.amountOut) revert WrongAmountOut(order.amountOut);

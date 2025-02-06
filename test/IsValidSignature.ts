@@ -23,7 +23,7 @@ describe("IsValidSignature case", function () {
 
         // Deploy Module
         const moduleFactory = await hre.ethers.getContractFactory("ArbitrageModule");
-        const module = await moduleFactory.deploy(safeAddress);
+        const module = await moduleFactory.deploy();
 
         const compatibilityFallbackHandlerAddress = "0xfd0732Dc9E303f09fCEf3a7388Ad10A83459Ec99"
         // const compatibilityFallbackHandlerAddress = "0xf48f2B2d2a534e402487b3ee7C18c33Aec0Fe5e4"
@@ -31,8 +31,8 @@ describe("IsValidSignature case", function () {
             await ethers.getContractAt("CompatibilityFallbackHandler", compatibilityFallbackHandlerAddress);
 
         // Enable module
-        const enablePop = await safe.enableModule.populateTransaction(module.target)
-        await execSafeTransaction(safe, enablePop, owner, 0);
+        // const enablePop = await safe.enableModule.populateTransaction(module.target)
+        // await execSafeTransaction(safe, enablePop, owner, 0);
 
         return { module, safe, compatibilityFallbackHandler, owner, otherAccount };
     }
