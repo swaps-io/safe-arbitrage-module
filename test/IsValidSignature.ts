@@ -18,7 +18,7 @@ describe("IsValidSignature case", function () {
         const [owner, otherAccount] = await hre.ethers.getSigners();
 
         // Deploy Safe Wallet
-        const safeAddress = await deploySafeWallet(owner, "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80", )
+        const safeAddress = await deploySafeWallet(owner, hre.config.networks.hardhat.accounts[0].privateKey, )
         const safe = await ethers.getContractAt("Safe", safeAddress);
 
         // Deploy Module
